@@ -31,5 +31,5 @@ jobs:
       with:
         app-name: 'bari'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_e72e10ef37124bbfa8a8795fb61dbc79 }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_1a0f5726eac848baaac2ca5c6ac1a6a7 }}
         package: ${{env.DOTNET_ROOT}}/myapp 
