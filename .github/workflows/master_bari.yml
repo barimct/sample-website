@@ -7,18 +7,20 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v2
 
     - name: Set up .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '3.0.103'
+        dotnet-version: '5.0.x'
+        include-prerelease: true
 
     - name: Build with dotnet
       run: dotnet build --configuration Release
@@ -26,10 +28,30 @@ jobs:
     - name: dotnet publish
       run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
+    - name: Upload artifact for deployment job
+      uses: actions/upload-artifact@v2
+      with:
+        name: .net-app
+        path: ${{env.DOTNET_ROOT}}/myapp
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v2
+      with:
+        name: .net-app
+
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v1
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
       with:
         app-name: 'bari'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_ad06e0021fad4be1b7aac589b88b1915 }}
-        package: ${{env.DOTNET_ROOT}}/myapp 
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_31283b029e5a49308ab06e4fddb13645 }}
+        package: .
